@@ -37,7 +37,7 @@ class Blog(BaseModel):
 
 
 #main.py
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI, Response, status, HTTPException
 import models
 from database import engine, SessionLocal
 models.Base.metadata.create_all(engine)
@@ -61,11 +61,21 @@ def index(request: schemas.Blog, db: Session = Depends(get_db)):
     return new_blog
 
 @app.get("/getsingleblog/{id}", satus_code=200)
-def getSingleBlog(id, response: Response db: Session = Depends(get_db))
+def getSingleBlog(id, response: Response db: Session = Depends(get_db)):
     query = db.query(models.Blog).filter(models.Blog.id == id).first()
 
     if not query:
-        response.status_code = 404
-        return {"details": "Blog not found"}
-        
+        raise HTTPException(status_code=404, details: "Blog not Found!")
+        # response.status_code = 404
+        # return {"details": "Blog not found"}
+
     return query
+
+@app.delete("/deleteblog/{id}")
+def deleteItem(id, db: Session = Depends(get_db)):
+    query = db.query(models.Blog).filter(models.Blog.id == id).delete()
+    db.commit()
+
+    if not query:
+        raise HTTPException(status_code=501, message="Could not Delete the file")
+    return {"message": "file deleted successfully"}
